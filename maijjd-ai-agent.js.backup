@@ -1,0 +1,321 @@
+/**
+ * MJND AI Agent - Custom AI Assistant for Maijjd Platform
+ * Handles customer inquiries automatically with brand voice
+ */
+
+console.log('🔧 MJND AGENT FILE LOADED - VERSION WITH IMPROVED INTENT DETECTION');
+
+class MJNDAgent {
+  constructor() {
+    this.name = "MJND Agent";
+    this.version = "1.0.0";
+    this.brand = "Maijjd";
+    this.responses = this.initializeResponses();
+    this.context = {
+      currentUser: null,
+      conversationHistory: [],
+      activeServices: [],
+      pricing: null
+    };
+  }
+
+  /**
+   * Initialize response templates for common inquiries
+   */
+  initializeResponses() {
+    return {
+      greeting: [
+        "Hello! I'm MJND, your AI assistant for Maijjd. How can I help you today?",
+        "Hi there! MJND here, ready to assist you with Maijjd's software solutions. What can I do for you?",
+        "Welcome! I'm MJND, your personal guide to Maijjd's 50+ software categories and 26+ services. How may I help?"
+      ],
+      software: [
+        "Maijjd offers 50+ software categories including System Software, Application Software, Development Tools, Scientific Software, Real-time Software, Embedded Software, Cloud Software, AI & Machine Learning, CRM, ERP, and many more!",
+        "Our software portfolio covers everything from basic productivity tools to advanced enterprise solutions. We have System Software, Application Software, Development Software, Scientific Software, Real-time Software, Embedded Software, Cloud Software, AI platforms, CRM, ERP, and 40+ other specialized categories.",
+        "Maijjd provides comprehensive software solutions across 50 categories. From System Software & Operating Systems to AI & Machine Learning Platforms, CRM & Customer Management, ERP & Business Process Management, and 40+ more specialized categories."
+      ],
+      services: [
+        "Maijjd offers 26+ professional services including Custom Software Development, Web Application Development, Mobile App Development, Cloud Infrastructure & DevOps, AI & Machine Learning Services, Data Analytics & Business Intelligence, Cybersecurity & Compliance, UI/UX Design, Quality Assurance & Testing, Technical Consulting & Architecture, and 16+ more services.",
+        "Our service portfolio includes Custom Software Development, Web & Mobile App Development, Cloud Infrastructure & DevOps, AI & Machine Learning Services, Data Analytics & Business Intelligence, Cybersecurity & Compliance, UI/UX Design, Quality Assurance & Testing, Technical Consulting, and 16+ additional professional services.",
+        "We provide 26+ specialized services: Custom Software Development, Web & Mobile Development, Cloud Infrastructure & DevOps, AI & Machine Learning Services, Data Analytics & Business Intelligence, Cybersecurity & Compliance, UI/UX Design, Quality Assurance & Testing, Technical Consulting & Architecture, and 16+ more professional services."
+      ],
+      pricing: [
+        "Maijjd offers flexible pricing with a free tier for basic features, professional plans for businesses, enterprise solutions for large organizations, and custom pricing for specialized needs. All admin users have free access to all features.",
+        "Our pricing structure includes: Free tier for basic features, Professional plans for businesses, Enterprise solutions for large organizations, and Custom pricing for specialized needs. Admin users get free access to all categories.",
+        "Maijjd provides: Free tier for basic features, Professional plans for businesses, Enterprise solutions for large organizations, and Custom pricing for specialized needs. Admin users have zero cost access to all software and services."
+      ],
+      support: [
+        "Maijjd provides 24/7 technical support for all users. You can reach us at info@maijjd.com or through our support portal at https://maijjd.com/support.",
+        "We offer round-the-clock technical support. Contact us at info@maijjd.com or visit https://maijjd.com/support for assistance.",
+        "Maijjd's support team is available 24/7. Reach out to us at info@maijjd.com or access our support portal at https://maijjd.com/support."
+      ],
+      features: [
+        "Maijjd's key features include: Complete project management, Real-time collaboration tools, Advanced analytics and reporting, Secure data handling, Scalable infrastructure, Integrated development tools, Code collaboration features, Version control integration, Automated testing frameworks, Deployment pipelines, and Performance monitoring.",
+        "Our platform offers: Complete project management, Real-time collaboration tools, Advanced analytics and reporting, Secure data handling, Scalable infrastructure, Integrated development tools, Code collaboration features, Version control integration, Automated testing frameworks, Deployment pipelines, and Performance monitoring.",
+        "Key features of Maijjd: Complete project management, Real-time collaboration tools, Advanced analytics and reporting, Secure data handling, Scalable infrastructure, Integrated development tools, Code collaboration features, Version control integration, Automated testing frameworks, Deployment pipelines, and Performance monitoring."
+      ],
+      general: [
+        "I'm MJND, your AI assistant for Maijjd! I can help you with:\n\n🔧 **Software Solutions**: 50+ categories including System Software, Application Software, Development Tools, AI & Machine Learning, CRM, ERP, and more\n\n🛠️ **Professional Services**: 26+ services like Custom Software Development, Web & Mobile Development, Cloud Infrastructure, AI Services, Data Analytics, Cybersecurity, UI/UX Design, and more\n\n💰 **Pricing**: Free tier, Professional plans, Enterprise solutions, and custom pricing\n\n✨ **Features**: Project management, Real-time collaboration, Advanced analytics, Secure data handling, and more\n\n🆘 **Support**: 24/7 technical support and assistance\n\nWhat would you like to know more about?",
+        "Hello! I'm here to assist you with Maijjd's comprehensive offerings:\n\n**Software Categories (50+)**: From basic productivity tools to advanced enterprise solutions\n**Professional Services (26+)**: Custom development, consulting, cloud services, AI solutions\n**Flexible Pricing**: Free tier to enterprise plans\n**Advanced Features**: Collaboration tools, analytics, security, scalability\n**24/7 Support**: Always here to help\n\nFeel free to ask me about any of these areas!",
+        "Hi there! I'm MJND, your guide to Maijjd's platform. Here's what I can help you with:\n\n📊 **Software Portfolio**: 50+ categories covering System Software, Application Software, Development Tools, Scientific Software, Real-time Software, Embedded Software, Cloud Software, AI & Machine Learning, CRM, ERP, and 40+ more\n\n🚀 **Professional Services**: 26+ services including Custom Software Development, Web Application Development, Mobile App Development, Cloud Infrastructure & DevOps, AI & Machine Learning Services, Data Analytics & Business Intelligence, Cybersecurity & Compliance, UI/UX Design, Quality Assurance & Testing, Technical Consulting & Architecture, and 16+ more\n\n💡 **Key Features**: Complete project management, Real-time collaboration tools, Advanced analytics and reporting, Secure data handling, Scalable infrastructure, and more\n\nWhat specific area interests you most?"
+      ]
+    };
+  }
+
+  /**
+   * Process incoming customer message and generate appropriate response
+   */
+  async processMessage(message, userContext = {}) {
+    try {
+      // Update context with user information
+      this.context.currentUser = userContext;
+      
+      // Add to conversation history
+      this.context.conversationHistory.push({
+        timestamp: new Date(),
+        user: message,
+        agent: null
+      });
+
+      // Analyze message intent
+      const intent = this.analyzeIntent(message);
+      console.log('🔧 MJND Agent - Message:', message);
+      console.log('🔧 MJND Agent - Detected Intent:', intent);
+      
+      // Generate response based on intent
+      const response = await this.generateResponse(intent, message, userContext);
+      
+      // Add response to conversation history
+      this.context.conversationHistory[this.context.conversationHistory.length - 1].agent = response;
+      
+      return {
+        success: true,
+        response: response,
+        intent: intent,
+        timestamp: new Date(),
+        agent: this.name
+      };
+    } catch (error) {
+      console.error('Error processing message:', error);
+      return {
+        success: false,
+        error: 'Sorry, I encountered an error. Please try again or contact support.',
+        timestamp: new Date(),
+        agent: this.name
+      };
+    }
+  }
+
+  /**
+   * Analyze user intent from message
+   */
+  analyzeIntent(message) {
+    console.log('🔧 ANALYZE INTENT CALLED with message:', message);
+    const lowerMessage = message.toLowerCase().trim();
+    
+    // Greeting patterns - exact matches first
+    if (lowerMessage === 'hi' || lowerMessage === 'hello' || lowerMessage === 'hey' || 
+        lowerMessage === 'good morning' || lowerMessage === 'good afternoon' || 
+        lowerMessage === 'good evening' || lowerMessage.startsWith('hello') || 
+        lowerMessage.startsWith('hi there') || lowerMessage.startsWith('hey there')) {
+      return 'greeting';
+    }
+    
+    // Software inquiries - specific patterns first
+    if (lowerMessage.includes('what software') || lowerMessage.includes('software categories') ||
+        lowerMessage.includes('what programs') || lowerMessage.includes('programming tools') ||
+        lowerMessage.includes('development tools') || lowerMessage.includes('software solutions') ||
+        lowerMessage.includes('applications') || lowerMessage.includes('software portfolio') ||
+        lowerMessage.includes('software offerings') || lowerMessage.includes('available software') ||
+        lowerMessage.includes('software catalog') || lowerMessage.includes('software library')) {
+      return 'software';
+    }
+    
+    // Services inquiries - specific patterns first
+    if (lowerMessage.includes('what services') || lowerMessage.includes('tell me about services') ||
+        lowerMessage.includes('professional services') || lowerMessage.includes('consulting services') ||
+        lowerMessage.includes('development services') || lowerMessage.includes('custom development') ||
+        lowerMessage.includes('web development') || lowerMessage.includes('mobile development') ||
+        lowerMessage.includes('create website') || lowerMessage.includes('build website') ||
+        lowerMessage.includes('website development') || lowerMessage.includes('app development') ||
+        lowerMessage.includes('software development') || lowerMessage.includes('custom software') ||
+        lowerMessage.includes('web application') || lowerMessage.includes('mobile application') ||
+        lowerMessage.includes('cloud services') || lowerMessage.includes('devops services') ||
+        lowerMessage.includes('ai services') || lowerMessage.includes('machine learning services') ||
+        lowerMessage.includes('data analytics') || lowerMessage.includes('cybersecurity services') ||
+        lowerMessage.includes('ui/ux design') || lowerMessage.includes('quality assurance') ||
+        lowerMessage.includes('technical consulting') || lowerMessage.includes('architecture services')) {
+      return 'services';
+    }
+    
+    // Pricing inquiries - specific patterns first
+    if (lowerMessage.includes('how much') || lowerMessage.includes('what does it cost') ||
+        lowerMessage.includes('pricing plans') || lowerMessage.includes('subscription plans') ||
+        lowerMessage.includes('payment options') || lowerMessage.includes('billing information') ||
+        lowerMessage.includes('cost breakdown') || lowerMessage.includes('price list') ||
+        lowerMessage.includes('free trial') || lowerMessage.includes('free tier') ||
+        lowerMessage.includes('enterprise pricing') || lowerMessage.includes('custom pricing')) {
+      return 'pricing';
+    }
+    
+    // Support inquiries - specific patterns first
+    if (lowerMessage.includes('technical support') || lowerMessage.includes('customer support') ||
+        lowerMessage.includes('contact support') || lowerMessage.includes('get help') ||
+        lowerMessage.includes('report bug') || lowerMessage.includes('report issue') ||
+        lowerMessage.includes('troubleshoot') || lowerMessage.includes('fix problem') ||
+        lowerMessage.includes('resolve issue') || lowerMessage.includes('error message') ||
+        lowerMessage.includes('not working') || lowerMessage.includes('broken') ||
+        lowerMessage.includes('support ticket') || lowerMessage.includes('help desk') ||
+        lowerMessage.includes('bug report') || lowerMessage.includes('error report') ||
+        lowerMessage.includes('system error') || lowerMessage.includes('application error') ||
+        lowerMessage.includes('login problem') || lowerMessage.includes('access issue') ||
+        lowerMessage.includes('connection problem') || lowerMessage.includes('performance issue')) {
+      return 'support';
+    }
+    
+    // Features inquiries - specific patterns first
+    if (lowerMessage.includes('what features') || lowerMessage.includes('key features') ||
+        lowerMessage.includes('platform features') || lowerMessage.includes('capabilities') ||
+        lowerMessage.includes('functionality') || lowerMessage.includes('what can it do') ||
+        lowerMessage.includes('how does it work') || lowerMessage.includes('benefits') ||
+        lowerMessage.includes('advantages') || lowerMessage.includes('special features') ||
+        lowerMessage.includes('unique features') || lowerMessage.includes('main features')) {
+      return 'features';
+    }
+    
+    // Broader keyword matching (less specific)
+    if (lowerMessage.includes('software') || lowerMessage.includes('program') || 
+        lowerMessage.includes('application') || lowerMessage.includes('app') || 
+        lowerMessage.includes('tool') || lowerMessage.includes('platform')) {
+      return 'software';
+    }
+    
+    if (lowerMessage.includes('service') || lowerMessage.includes('development') || 
+        lowerMessage.includes('consulting') || lowerMessage.includes('create') ||
+        lowerMessage.includes('build') || lowerMessage.includes('design')) {
+      return 'services';
+    }
+    
+    if (lowerMessage.includes('price') || lowerMessage.includes('cost') || 
+        lowerMessage.includes('free') || lowerMessage.includes('payment') || 
+        lowerMessage.includes('pricing') || lowerMessage.includes('subscription') ||
+        lowerMessage.includes('plan') || lowerMessage.includes('billing')) {
+      return 'pricing';
+    }
+    
+    // Only match support keywords if they're in specific contexts
+    if ((lowerMessage.includes('help') && (lowerMessage.includes('with') || lowerMessage.includes('me') || lowerMessage.includes('problem') || lowerMessage.includes('issue'))) ||
+        (lowerMessage.includes('support') && (lowerMessage.includes('need') || lowerMessage.includes('get') || lowerMessage.includes('contact'))) ||
+        lowerMessage.includes('contact') || lowerMessage.includes('assistance') ||
+        lowerMessage.includes('problem') || lowerMessage.includes('issue') ||
+        lowerMessage.includes('trouble') || lowerMessage.includes('error') ||
+        lowerMessage.includes('bug') || lowerMessage.includes('how to') ||
+        lowerMessage.includes('tutorial') || lowerMessage.includes('guide')) {
+      return 'support';
+    }
+    
+    if (lowerMessage.includes('feature') || lowerMessage.includes('capability') || 
+        lowerMessage.includes('what can') || lowerMessage.includes('functionality') || 
+        lowerMessage.includes('what does') || lowerMessage.includes('how does') ||
+        lowerMessage.includes('benefits') || lowerMessage.includes('advantages')) {
+      return 'features';
+    }
+    
+    // General questions that should be treated as general, not support
+    if (lowerMessage === 'help' || lowerMessage === 'could you help me' || 
+        lowerMessage === 'can you help me' || lowerMessage === 'help me' ||
+        lowerMessage.includes('what can you do') || lowerMessage.includes('what do you do') ||
+        lowerMessage.includes('tell me about') || lowerMessage.includes('i need') ||
+        lowerMessage.includes('i want') || lowerMessage.includes('i am looking for') ||
+        lowerMessage.includes('i need help with') || lowerMessage.includes('can you assist') ||
+        lowerMessage.includes('what are your') || lowerMessage.includes('do you have') ||
+        lowerMessage.includes('show me') || lowerMessage.includes('explain') ||
+        lowerMessage.includes('information about') || lowerMessage.includes('more about')) {
+      return 'general';
+    }
+    
+    // Default to general inquiry
+    return 'general';
+  }
+
+  /**
+   * Generate response based on intent
+   */
+  async generateResponse(intent, message, userContext) {
+    const responses = this.responses[intent] || this.responses.greeting;
+    
+    // Select random response from available options
+    const selectedResponse = responses[Math.floor(Math.random() * responses.length)];
+    
+    // Customize response based on user context
+    let customizedResponse = selectedResponse;
+    
+    // Add personalization if user is authenticated
+    if (userContext.isAuthenticated) {
+      customizedResponse = `Hello ${userContext.name || 'there'}! ${customizedResponse}`;
+    }
+    
+    // Add relevant links based on intent
+    if (intent === 'software') {
+      customizedResponse += `\n\n🔗 Explore our software categories: https://maijjd.com/software-dashboard`;
+    } else if (intent === 'services') {
+      customizedResponse += `\n\n🔗 View our services: https://maijjd.com/services`;
+    } else if (intent === 'pricing') {
+      customizedResponse += `\n\n🔗 Check our pricing: https://maijjd.com/pricing`;
+    } else if (intent === 'support') {
+      customizedResponse += `\n\n🔗 Get support: https://maijjd.com/support`;
+    }
+    
+    return customizedResponse;
+  }
+
+  /**
+   * Get conversation history
+   */
+  getConversationHistory() {
+    return this.context.conversationHistory;
+  }
+
+  /**
+   * Clear conversation history
+   */
+  clearHistory() {
+    this.context.conversationHistory = [];
+  }
+
+  /**
+   * Update user context
+   */
+  updateUserContext(userContext) {
+    this.context.currentUser = userContext;
+  }
+
+  /**
+   * Get agent information
+   */
+  getAgentInfo() {
+    return {
+      name: this.name,
+      version: this.version,
+      brand: this.brand,
+      capabilities: [
+        'Customer support',
+        'Software information',
+        'Service inquiries',
+        'Pricing information',
+        'Feature explanations',
+        'General assistance'
+      ]
+    };
+  }
+}
+
+// Export for use in other modules
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = MJNDAgent;
+}
+
+// Global availability for browser use
+if (typeof window !== 'undefined') {
+  window.MJNDAgent = MJNDAgent;
+}
